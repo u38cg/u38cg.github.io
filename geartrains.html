@@ -1,0 +1,115 @@
+<!--
+
+History:
+- original Basic software by Mike Aireton
+- Pythonised by Silly Old Duffer
+- tweaked by Duncan Webster
+- Javascripted by Calum Galleitch
+
+This code is not licensed and not warranted for any purpose.  
+Copyright remains with the respective contributors.
+Use at your own risk!
+
+-->
+
+<style type="text/css">
+table {
+	border-style: none;
+    border-collapse: collapse;
+}
+th {
+	border-width: 1px;
+	padding: 1em;
+	border-style: inset;
+	border-color: gray;
+    text-align: center;
+}
+td {
+	border-width: 1px;
+	padding: 2px;
+	border-style: inset;
+	border-color: gray;
+    text-align: center;
+}
+</style>
+
+<h1>Gear train calculator v1.0-beta2</h1>
+<p>Please 'view source' for copyright and warranty details</p>
+<p>Metric pitch?  To convert 3mm pitch into TPI, calculate 25.4/3 and enter that figure.</p>
+<p>Diametric pitch? TPI = pi * DP</p>
+<hr>
+<div id="input_form">
+ <form onsubmit="return main()">
+  <label for="leadscrew_tpi">Leadscrew TPI:</label><br>
+  <input type="text" id="leadscrew_tpi" name="leadscrew_tpi" size="4" value="8"><br>
+  <label for="required_tpi">Required TPI:</label><br>
+  <input type="text" id="required_tpi" name="required_tpi" size="4" value="12"><br>
+  <label for="input_deviation">Input Deviation (acceptable error in TPI):</label><br>
+  <input type="text" id="input_deviation" name="input_deviation" size="8" value="0.001"><br>
+  <label for="available_gears">Available gears (comma separated list):</label><br>
+  <input type="text" id="available_gears" name="available_gears" value="20, 25, 30, 35, 40, 45, 50, 55, 60, 63, 65, 70, 75, 80, 85" size="80"><br><br>
+  <input type="submit" value="Submit"><br>
+</form> 
+</div>
+
+<div id="output_results">
+</div>
+
+<script type="text/javascript">  
+
+function main() {
+
+var leadscrew_tpi = document.getElementById("leadscrew_tpi").value
+var required_tpi = document.getElementById("required_tpi").value
+var acceptable_error = document.getElementById("input_deviation").value
+var available_gears = document.getElementById("available_gears").value.split(",")
+
+document.getElementById('output_results').innerHTML = ""
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br><hr>")
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Leadscrew TPI: " + leadscrew_tpi)
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Required TPI: " + required_tpi)
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Acceptable error: " + acceptable_error)
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Available gears: " + available_gears)
+
+
+
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<table id=\"results\"><tr><th>Driver 1</th><th>Driver 2</th><th>Driven 1</th><th>Driven 2</th><th>Error</th></tr>")
+
+for (var i = 0; i < available_gears.length; i++) {
+    for (var j = 0; j < available_gears.length; j++) {
+        for (var k = 0; k < available_gears.length; k++) {
+            for (var l = 0; l < available_gears.length; l++) {
+
+            // a & b are DRIVEN gears, c & d are drivers
+            var a = available_gears[i]
+            var b = available_gears[j]
+            var c = available_gears[k]
+            var d = available_gears[l]
+
+            if (a==b || a==c || a==d || b==c || b==d || c==d) continue
+            if (a>b || c>d) continue
+
+            abcd_tpi = a*b*leadscrew_tpi/(c*d)
+            abcd_error = Math.abs(required_tpi - abcd_tpi)
+
+            if ( abcd_error <= acceptable_error ) {
+                document.getElementById('results').insertAdjacentHTML('beforeend',"<tr><td>"+c+"</td><td>"+d+"</td><td>"+a+"</td><td>"+b+"</td><td>"+abcd_error.toPrecision(6)+"</td></tr>")
+                }
+
+            }
+        }
+    }
+}
+
+return false
+}
+
+</script>
+
+
+
+
+
+
+
+
