@@ -1,21 +1,37 @@
 <!--
 
-History:
+History (pre v1.0):
 - original Basic software by Mike Aireton
 - Pythonised by Silly Old Duffer
 - tweaked by Duncan Webster
 - Javascripted by Calum Galleitch
 
-- v1.0 18 July 2021 
-- Bumped to v1.0 due to lack of complaints.
+*****************************************************************
+**
+** This code is not licensed and not warranted for any purpose.  
+** Copyright remains with the respective contributors.
+** Use at your own risk!
+**
+*****************************************************************
 
-This code is not licensed and not warranted for any purpose.  
-Copyright remains with the respective contributors.
-Use at your own risk!
+- v1.1 19 July 2021
+
+ * Initial ratio reduction
+ * added a hidden 'log' div, which can be unhidden for debugging.
+ * Added explicit type conversion to inputs, as some of the boolean logic was breaking on string comparison.
+ * Added an SVG diagram 
+
+- v1.0 18 July 2021 
+
+ * Bumped to v1.0 due to lack of complaints.
 
 -->
 
 <style type="text/css">
+
+#diagram {
+    float: right;
+    }
 table {
 	border-style: none;
     border-collapse: collapse;
@@ -34,15 +50,33 @@ td {
 	border-color: gray;
     text-align: center;
 }
+#log {
+    /* Normally hidden */
+    display:none;
+    word-wrap: break-word;
+}
+
+/***********************************
+** This outlines everything on the 
+** page; used to find elements that
+** are misbehaving.
+************************************
+
+* {
+  outline: 1px solid #f00 !important;
+*************************************/
+}
 </style>
 
-<h1>Gear train calculator v1.0</h1>
+<h1>Gear train calculator v1.1</h1>
 <p>Please 'view source' for copyright and warranty details</p>
 <p>Metric pitch?  To convert 3mm pitch into TPI, calculate 25.4/3 and enter that figure.</p>
 <p>Diametric pitch? TPI = pi * DP</p>
 <hr>
 <div id="input_form">
  <form onsubmit="return main()">
+  <label for="input_reduction">Input reduction (multiplier):</label><br>
+  <input type="text" id="input_reduction" name="input_reduction" size="4" value="1.0"><br>  
   <label for="leadscrew_tpi">Leadscrew TPI:</label><br>
   <input type="text" id="leadscrew_tpi" name="leadscrew_tpi" size="4" value="8"><br>
   <label for="required_tpi">Required TPI:</label><br>
@@ -50,22 +84,52 @@ td {
   <label for="input_deviation">Input Deviation (acceptable error in TPI):</label><br>
   <input type="text" id="input_deviation" name="input_deviation" size="8" value="0.001"><br>
   <label for="available_gears">Available gears (comma separated list):</label><br>
-  <input type="text" id="available_gears" name="available_gears" value="20, 25, 30, 35, 40, 45, 50, 55, 60, 63, 65, 70, 75, 80, 85" size="80"><br><br>
-  <input type="submit" value="Submit"><br>
+  <input type="text" id="available_gears" name="available_gears" value="20, 25, 30, 35, 40, 45, 50, 55, 60, 63, 65, 70, 75, 80, 85" size="80"><br>
+  <label for="first_driver">Fixed driver (-1 if none):</label><br>
+  <input type="text" id="first_driver" name="first_driver" size="4" value="-1"><br>
+  <br><input type="submit" value="Submit"><br>
 </form> 
 </div>
 
+<div id="log">
+</div>
+
+<svg id="diagram" width="400" height="500" xmlns="http://www.w3.org/2000/svg">
+ <title>Driver Layout</title>
+
+ <g>
+  <title>Layer 1</title>
+  <rect id="svg_4" height="153.01246" width="58" y="11.97383" x="62.08807" stroke="#ffff00" fill="#ffff00"/>
+  <rect id="svg_5" height="159" width="45.46339" y="316.89822" x="16.3868" stroke="#ff0000" fill="#ff0000"/>
+  <rect id="svg_6" height="181.54644" width="43.53661" y="135.36133" x="17.20082" stroke="#00ff00" fill="#00ff00"/>
+  <rect id="svg_7" height="113.63731" width="57.14333" y="166.23765" x="62.34153" stroke="#007fff" fill="#007fff"/>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="24" stroke-width="0" id="svg_8" y="96.1072" x="83.12091" stroke="#007fff" fill="#000000">C</text>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="24" stroke-width="0" id="svg_10" y="237.66682" x="28.57501" stroke="#00ff00" fill="#000000">D</text>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="24" stroke-width="0" id="svg_11" y="214.93936" x="81.17284" stroke="#ff0000" fill="#000000">A</text>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="24" stroke-width="0" id="svg_12" y="411.0449" x="28.575" stroke="#ff0000" fill="#000000">B</text>
+  <rect id="svg_13" height="21.42875" width="236.36561" y="77.92522" x="122.08228" stroke="#000000" fill="#000000"/>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="16" stroke-width="0" id="svg_14" y="119.48401" x="211.69342" stroke="#000000" fill="#000000">INPUT</text>
+  <rect id="svg_15" height="21.42875" width="236.36561" y="390.26549" x="62.99088" stroke="#000000" fill="#000000"/>
+  <text xml:space="preserve" text-anchor="start" font-family="Noto Sans JP" font-size="16" stroke-width="0" id="svg_16" y="379.22644" x="146.10846" stroke="#000000" fill="#000000">OUTPUT</text>
+ </g>
+</svg>
+
 <div id="output_results">
+<hr>
 </div>
 
 <script type="text/javascript">  
 
 function main() {
 
-var leadscrew_tpi = document.getElementById("leadscrew_tpi").value
-var required_tpi = document.getElementById("required_tpi").value
-var acceptable_error = document.getElementById("input_deviation").value
-var available_gears = document.getElementById("available_gears").value.split(",")
+document.getElementById('log').insertAdjacentHTML('beforeend',"Begin log:<br><br>")
+
+var input_reduction     = parseFloat(   document.getElementById("input_reduction").value    )
+var leadscrew_tpi       = parseFloat(   document.getElementById("leadscrew_tpi").value      )
+var required_tpi        = parseFloat(   document.getElementById("required_tpi").value       )
+var acceptable_error    = parseFloat(   document.getElementById("input_deviation").value    )
+var available_gears     =               document.getElementById("available_gears").value.split(",")
+var first_driver        = parseInt(     document.getElementById("first_driver").value       )
 
 document.getElementById('output_results').innerHTML = ""
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br><hr>")
@@ -73,8 +137,6 @@ document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Le
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Required TPI: " + required_tpi)
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Acceptable error: " + acceptable_error)
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Available gears: " + available_gears)
-
-
 
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<table id=\"results\"><tr><th>Driver 1</th><th>Driver 2</th><th>Driven 1</th><th>Driven 2</th><th>Error</th></tr>")
 
@@ -84,15 +146,18 @@ for (var i = 0; i < available_gears.length; i++) {
             for (var l = 0; l < available_gears.length; l++) {
 
             // a & b are DRIVEN gears, c & d are drivers
-            var a = available_gears[i]
-            var b = available_gears[j]
-            var c = available_gears[k]
-            var d = available_gears[l]
+            var a = parseInt(available_gears[i])
+            var b = parseInt(available_gears[j])
+            var c = parseInt(available_gears[k])
+            var d = parseInt(available_gears[l])
 
             if (a==b || a==c || a==d || b==c || b==d || c==d) continue
             if (a>b || c>d) continue
+            
+            //if (first_driver != -1) { if (c!=first_driver) continue }
+            if (first_driver != -1 && c!=first_driver) continue 
 
-            abcd_tpi = a*b*leadscrew_tpi/(c*d)
+            abcd_tpi = input_reduction*a*b*leadscrew_tpi/(c*d)
             abcd_error = Math.abs(required_tpi - abcd_tpi)
 
             if ( abcd_error <= acceptable_error ) {
