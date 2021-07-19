@@ -1,3 +1,5 @@
+<!doctype html>
+
 <!--
 
 History (pre v1.0):
@@ -17,15 +19,24 @@ History (pre v1.0):
 - v1.1 19 July 2021
 
  * Initial ratio reduction
+ * Can now specify an initial fixed driver.
  * added a hidden 'log' div, which can be unhidden for debugging.
  * Added explicit type conversion to inputs, as some of the boolean logic was breaking on string comparison.
- * Added an SVG diagram 
+ * Added an SVG diagram.
+ * Outpuit states if no gear trains found
 
 - v1.0 18 July 2021 
 
- * Bumped to v1.0 due to lack of complaints.
+ * Beta1 bumped to v1.0 due to lack of complaints.
 
 -->
+
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gear Train Calculator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style type="text/css">
 
@@ -68,6 +79,9 @@ td {
 }
 </style>
 
+</head>
+
+<body>
 <h1>Gear train calculator v1.1</h1>
 <p>Please 'view source' for copyright and warranty details</p>
 <p>Metric pitch?  To convert 3mm pitch into TPI, calculate 25.4/3 and enter that figure.</p>
@@ -130,15 +144,20 @@ var required_tpi        = parseFloat(   document.getElementById("required_tpi").
 var acceptable_error    = parseFloat(   document.getElementById("input_deviation").value    )
 var available_gears     =               document.getElementById("available_gears").value.split(",")
 var first_driver        = parseInt(     document.getElementById("first_driver").value       )
+var row_count           =               0
 
-document.getElementById('output_results').innerHTML = ""
+document.getElementById('output_results').innerHTML = ""    // reset previous run (could leave in place but I worry
+                                                            // user could accidentally pick up wrong results)
+
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br><hr>")
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Leadscrew TPI: " + leadscrew_tpi)
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Required TPI: " + required_tpi)
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Acceptable error: " + acceptable_error)
 document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>Available gears: " + available_gears)
 
-document.getElementById('output_results').insertAdjacentHTML('beforeend',"<table id=\"results\"><tr><th>Driver 1</th><th>Driver 2</th><th>Driven 1</th><th>Driven 2</th><th>Error</th></tr>")
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>NB. Drivers C and D may be swapped, as can driven A and B, in order to fit.")
+
+document.getElementById('output_results').insertAdjacentHTML('beforeend',"<table id=\"results\"><tr><th>Driver C</th><th>Driver D</th><th>Driven A</th><th>Driven B</th><th>Error</th></tr>")
 
 for (var i = 0; i < available_gears.length; i++) {
     for (var j = 0; j < available_gears.length; j++) {
@@ -162,6 +181,7 @@ for (var i = 0; i < available_gears.length; i++) {
 
             if ( abcd_error <= acceptable_error ) {
                 document.getElementById('results').insertAdjacentHTML('beforeend',"<tr><td>"+c+"</td><td>"+d+"</td><td>"+a+"</td><td>"+b+"</td><td>"+abcd_error.toPrecision(6)+"</td></tr>")
+                row_count +=1
                 }
 
             }
@@ -169,11 +189,14 @@ for (var i = 0; i < available_gears.length; i++) {
     }
 }
 
+if (row_count==0) document.getElementById('output_results').insertAdjacentHTML('beforeend',"<br>No trains matching constraints found")
+
 return false
 }
 
 </script>
-
+</body>
+</html>
 
 
 
